@@ -3,7 +3,7 @@
 import csv
 from typing import Any
 
-from budget.core import add_transaction, get_balance
+from budget.core import add_transaction, filter_by_category, get_balance
 
 
 def test_add_transaction_increases_length() -> None:
@@ -109,3 +109,76 @@ def test_get_balance_with_step2_transactions_csv() -> None:
             transactions.append(row)
 
     assert get_balance(transactions) == 24285027.0
+
+
+def test_filter_by_category_uses_step2_category() -> None:
+    transactions: list[dict[str, Any]] = []
+
+    with open("data/step2_transactions.csv", encoding="utf-8-sig") as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            row["amount"] = int(row["amount"])
+            transactions.append(row)
+
+    result = filter_by_category(transactions, "급여")
+
+    assert len(result) == 9
+    assert all(transaction["category"] == "급여" for transaction in result)
+
+
+def test_filter_by_category_matches_case_insensitively() -> None:
+    transactions: list[dict[str, Any]] = [
+        {
+            "date": "2026-04-01",
+            "type": "expense",
+            "category": "Food",
+            "description": "lunch",
+            "amount": -12000,
+            "memo": "",
+        },
+        {
+            "date": "2026-04-02",
+            "type": "expense",
+            "category": "Transport",
+            "description": "subway",
+            "amount": -1500,
+            "memo": "",
+        },
+    ]
+
+    result = filter_by_category(transactions, "food")
+
+    assert result == [transactions[0]]
+
+
+def test_filter_by_category_returns_empty_list_for_missing_category() -> None:
+    transactions: list[dict[str, Any]] = [
+        {
+            "date": "2026-01-10",
+            "type": "지출",
+            "category": "교통",
+            "description": "지하철",
+            "amount": -1500,
+            "memo": "",
+        },
+    ]
+
+    assert filter_by_category(transactions, "의료") == []
+
+
+def test_filter_by_category_returns_independent_results() -> None:
+    transactions: list[dict[str, Any]] = [
+        {
+            "date": "2026-01-07",
+            "type": "수입",
+            "category": "급여",
+            "description": "월급",
+            "amount": 3500000,
+            "memo": "1월급여",
+        },
+    ]
+
+    result = filter_by_category(transactions, "급여")
+    result[0]["amount"] = 0
+
+    assert transactions[0]["amount"] == 3500000
