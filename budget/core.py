@@ -1,5 +1,6 @@
 """Core budget functions for the CSV-based CLI app."""
 
+import csv
 from typing import Any
 
 
@@ -35,3 +36,16 @@ def filter_by_category(
         for transaction in transactions
         if str(transaction["category"]).casefold() == normalized_category
     ]
+
+
+def load_transactions_from_csv(file_path: str) -> list[dict[str, Any]]:
+    """Load transactions from a UTF-8 BOM compatible CSV file."""
+    transactions: list[dict[str, Any]] = []
+
+    with open(file_path, encoding="utf-8-sig", newline="") as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            row["amount"] = int(row["amount"])
+            transactions.append(row)
+
+    return transactions

@@ -1,9 +1,13 @@
 """Tests for budget core functions."""
 
-import csv
 from typing import Any
 
-from budget.core import add_transaction, filter_by_category, get_balance
+from budget.core import (
+    add_transaction,
+    filter_by_category,
+    get_balance,
+    load_transactions_from_csv,
+)
 
 
 def test_add_transaction_increases_length() -> None:
@@ -100,25 +104,13 @@ def test_get_balance_returns_zero_for_empty_transactions() -> None:
 
 
 def test_get_balance_with_step2_transactions_csv() -> None:
-    transactions: list[dict[str, Any]] = []
-
-    with open("data/step2_transactions.csv", encoding="utf-8-sig") as file:
-        reader = csv.DictReader(file)
-        for row in reader:
-            row["amount"] = int(row["amount"])
-            transactions.append(row)
+    transactions = load_transactions_from_csv("data/step2_transactions.csv")
 
     assert get_balance(transactions) == 24285027.0
 
 
 def test_filter_by_category_uses_step2_category() -> None:
-    transactions: list[dict[str, Any]] = []
-
-    with open("data/step2_transactions.csv", encoding="utf-8-sig") as file:
-        reader = csv.DictReader(file)
-        for row in reader:
-            row["amount"] = int(row["amount"])
-            transactions.append(row)
+    transactions = load_transactions_from_csv("data/step2_transactions.csv")
 
     result = filter_by_category(transactions, "급여")
 
@@ -182,3 +174,24 @@ def test_filter_by_category_returns_independent_results() -> None:
     result[0]["amount"] = 0
 
     assert transactions[0]["amount"] == 3500000
+
+
+def test_load_transactions_from_csv_reads_step1_transactions() -> None:
+    transactions = load_transactions_from_csv("data/step1_transactions.csv")
+
+    assert len(transactions) == 10
+    assert transactions[0] == {
+        "date": "2026-01-05",
+        "type": "지출",
+        "category": "식비",
+        "description": "점심식사",
+        "amount": -12000,
+        "memo": "",
+    }
+
+
+def test_load_transactions_from_csv_converts_amount_to_int() -> None:
+    transactions = load_transactions_from_csv("data/step1_transactions.csv")
+
+    assert transactions[1]["amount"] == 3500000
+    assert isinstance(transactions[1]["amount"], int)
