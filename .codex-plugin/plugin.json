@@ -1,0 +1,10 @@
+{
+  "name": "budgetApp",
+  "version": "0.1.0",
+  "description": "Project rules and QA guidance for the budgetApp CSV CLI bookkeeping app.",
+  "entrypoints": {
+    "skills": [
+      "skills/budget-cli/SKILL.md"
+    ]
+  }
+}
