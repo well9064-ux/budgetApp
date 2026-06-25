@@ -7,6 +7,7 @@ from budget.core import (
     filter_by_category,
     get_balance,
     load_transactions_from_csv,
+    monthly_summary,
 )
 
 
@@ -195,3 +196,21 @@ def test_load_transactions_from_csv_converts_amount_to_int() -> None:
 
     assert transactions[1]["amount"] == 3500000
     assert isinstance(transactions[1]["amount"], int)
+
+
+def test_monthly_summary_groups_income_expense_and_net() -> None:
+    transactions = load_transactions_from_csv("data/step1_transactions.csv")
+
+    result = monthly_summary(transactions)
+
+    assert result == {
+        "2026-01": {
+            "income": 3525000,
+            "expense": -158300,
+            "net": 3366700,
+        }
+    }
+
+
+def test_monthly_summary_returns_empty_dict_for_no_transactions() -> None:
+    assert monthly_summary([]) == {}
